@@ -39,20 +39,35 @@
       color: var(--text);
       min-height: 100vh;
       display: flex;
-      overflow: hidden;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 16% 16%, rgba(20, 200, 191, 0.14), transparent 18%),
+        radial-gradient(circle at 88% 12%, rgba(212, 168, 67, 0.12), transparent 14%),
+        radial-gradient(circle at 50% 96%, rgba(255, 255, 255, 0.04), transparent 20%);
+      z-index: -1;
     }
 
     /* ── SIDEBAR ──────────────────────────────────── */
     .sidebar {
       width: 220px;
       min-height: 100vh;
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
-      padding: 24px 14px;
+      background: linear-gradient(180deg, rgba(10, 15, 28, 0.95), rgba(15, 23, 40, 0.95));
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 24px 18px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 8px;
       flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      box-shadow: 2px 0 30px rgba(0, 0, 0, 0.18);
     }
 
     .logo {
@@ -117,26 +132,102 @@
       display: flex;
     }
 
+    /* Centered page helper: centers single-card pages horizontally */
+    .page.center-page {
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 140px);
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
+
+    .page.center-page .card {
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
     .page-title {
       font-family: 'Syne', sans-serif;
       font-size: 22px;
       font-weight: 700;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid var(--border);
       padding-bottom: 14px;
+      gap: 16px;
     }
 
     .page-title span {
-      color: var(--gold);
+      color: var(--gold2);
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      padding: 20px 0 10px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .dashboard-header p {
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .dashboard-header .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     /* ── CARDS ────────────────────────────────────── */
     .card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(8,12,20,0.92), rgba(18,26,40,0.9));
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 24px 60px rgba(6,8,12,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+      backdrop-filter: blur(8px);
+      transition: transform 0.22s cubic-bezier(.2,.9,.3,1), box-shadow 0.22s ease;
+      display: flex;
+      flex-direction: column;
     }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(90deg, rgba(20,200,191,0.06), rgba(212,168,67,0.06));
+      z-index: 0;
+      filter: blur(16px);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 30px 80px rgba(6,8,12,0.75), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    /* make card content appear above decorative pseudo element */
+    .card > * { position: relative; z-index: 1; }
 
     .card-title {
       font-family: 'Syne', sans-serif;
@@ -145,7 +236,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     /* ── STAT CARDS ───────────────────────────────── */
@@ -156,12 +247,13 @@
     }
 
     .stat-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
+      background: rgba(15, 22, 38, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 20px;
       position: relative;
       overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 12px 28px rgba(0, 0, 0, 0.12);
     }
 
     .stat-card::before {
@@ -170,9 +262,8 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: var(--gold);
-      opacity: 0.5;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(212, 168, 67, 0.9), rgba(20, 200, 191, 0.9));
     }
 
     .stat-label {
@@ -214,34 +305,42 @@
 
     /* ── CHAT ─────────────────────────────────────── */
     .chat-messages {
-      height: 240px;
+      height: 320px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 4px 2px;
-      margin-bottom: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, rgba(20,200,191,0.03) 0%, rgba(212,168,67,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
       scrollbar-width: thin;
       scrollbar-color: var(--bg3) transparent;
+      flex: 1;
     }
 
     .msg {
       max-width: 88%;
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 18px;
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.6;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.07);
+      position: relative;
     }
 
     .msg.user {
-      background: rgba(212, 168, 67, 0.12);
-      border: 1px solid rgba(212, 168, 67, 0.2);
+      background: rgba(212, 168, 67, 0.16);
+      border: 1px solid rgba(212, 168, 67, 0.3);
       align-self: flex-end;
+      color: #0c111a;
+      backdrop-filter: blur(12px);
     }
 
     .msg.bot {
-      background: var(--bg3);
-      border: 1px solid var(--border);
+      background: rgba(16, 24, 41, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       align-self: flex-start;
     }
 
@@ -256,7 +355,89 @@
 
     .chat-input-row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+    }
+
+    .chat-input-row .btn {
+      flex-shrink: 0;
+      min-width: 50px;
+      padding: 12px 16px;
+    }
+
+    .chat-welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      text-align: center;
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .chat-welcome.hidden {
+      display: none;
+    }
+
+    .chat-welcome-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .chat-welcome h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--gold2);
+      letter-spacing: 0.01em;
+    }
+
+    .chat-welcome p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 22px;
+      max-width: 240px;
+    }
+
+    .chat-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 260px;
+    }
+
+    .chat-feature-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .chat-feature-item:hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-2px);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
     }
 
     /* ── INPUTS ───────────────────────────────────── */
@@ -265,20 +446,22 @@
     input[type="file"],
     textarea {
       width: 100%;
-      padding: 10px 14px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      padding: 12px 16px;
+      background: rgba(17, 26, 46, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
       color: var(--text);
       font-family: inherit;
       font-size: 13px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.2s ease;
     }
 
     input:focus,
     textarea:focus {
-      border-color: rgba(212, 168, 67, 0.4);
+      border-color: rgba(212, 168, 67, 0.5);
+      background: rgba(17, 26, 46, 0.95);
+      box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
     }
 
     input[type="range"] {
@@ -299,33 +482,38 @@
 
     /* ── BUTTONS ──────────────────────────────────── */
     .btn {
-      padding: 10px 18px;
+      padding: 12px 20px;
       border: none;
-      border-radius: 8px;
+      border-radius: 999px;
       cursor: pointer;
       font-family: 'Instrument Sans', sans-serif;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 13px;
+      letter-spacing: 0.02em;
       transition: all 0.18s ease;
+      min-height: 44px;
     }
 
     .btn-gold {
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      background: linear-gradient(135deg, #f3d687 0%, #d4a843 60%);
       color: #0a0e18;
+      box-shadow: 0 18px 50px rgba(212, 168, 67, 0.14), 0 6px 18px rgba(0,0,0,0.45) inset;
     }
 
     .btn-gold:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
+      filter: brightness(1.06);
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 26px 70px rgba(212,168,67,0.18), 0 6px 18px rgba(0,0,0,0.5) inset;
     }
 
     .btn-ghost {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
     }
 
     .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
       color: var(--text);
       border-color: rgba(255, 255, 255, 0.15);
     }
@@ -554,43 +742,44 @@
         grid-template-columns: 1fr;
       }
     }
+
     @media (max-width: 768px) {
-  body {
-    overflow-y: auto;
-  }
+      body {
+        overflow-y: auto;
+      }
 
-  .sidebar {
-    display: none;
-  }
+      .sidebar {
+        display: none;
+      }
 
-  .main {
-    padding: 16px;
-  }
+      .main {
+        padding: 16px;
+      }
 
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
 
-  .dash-grid {
-    grid-template-columns: 1fr;
-  }
+      .dash-grid {
+        grid-template-columns: 1fr;
+      }
 
-  .bottom-grid {
-    grid-template-columns: 1fr;
-  }
+      .bottom-grid {
+        grid-template-columns: 1fr;
+      }
 
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
 
-  .stat-val {
-    font-size: 22px;
-  }
+      .stat-val {
+        font-size: 22px;
+      }
 
-  .page-title {
-    font-size: 18px;
-  }
-}
+      .page-title {
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 
@@ -616,6 +805,16 @@
     <!-- ── DASHBOARD ─────────────── -->
     <div id="dashboard" class="page active">
       <div class="page-title">Smart <span>Dashboard</span></div>
+      <div class="dashboard-header">
+        <div>
+          <h2>AI Financial Advisor</h2>
+          <p>Get fast recommendations for investments, SIP planning, tax savings and portfolio health in one place.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-gold" onclick="showPage('score', event)">Start Planning</button>
+          <button class="btn btn-ghost" onclick="showPage('chat', event)">Review Reports</button>
+        </div>
+      </div>
 
       <!-- STATS -->
       <div class="stats-row">
@@ -647,18 +846,23 @@
         <!-- AI CHAT PANEL -->
         <div class="card">
           <div class="card-title">🤖 AI Financial Advisor</div>
-          <div class="chat-messages" id="dashChat"></div>
+          <div class="chat-messages" id="dashChat">
+            <div class="chat-welcome" id="chatWelcome">
+              <div class="chat-welcome-icon">💬</div>
+              <h3>Hi! I'm your AI Advisor</h3>
+              <p>Ask me anything about investments, taxes, SIPs, portfolio strategy, and more.</p>
+              <div class="chat-features">
+                <div class="chat-feature-item" onclick="dashQuick('Portfolio advice')">📊 Portfolio</div>
+                <div class="chat-feature-item" onclick="dashQuick('Tax planning tips')">💸 Taxes</div>
+                <div class="chat-feature-item" onclick="dashQuick('SIP strategy')">📈 SIP Plan</div>
+                <div class="chat-feature-item" onclick="dashQuick('Risk assessment')">⚠️ Risk</div>
+              </div>
+            </div>
+          </div>
           <div class="chat-input-row">
             <input type="text" id="dashMsg" placeholder="Ask anything about your finances…"
               onkeypress="if(event.key==='Enter') dashSend()">
             <button class="btn btn-gold" onclick="dashSend()" id="dashBtn">➤</button>
-          </div>
-          <div class="quick-btns">
-            <button class="btn btn-ghost" onclick="dashQuick('Should I rebalance my portfolio now?')">📊
-              Rebalance</button>
-            <button class="btn btn-ghost" onclick="dashQuick('Give me tax saving tips for FY 2024-25')">💸 Tax
-              Tips</button>
-            <button class="btn btn-ghost" onclick="dashQuick('Best SIP strategy for ₹10,000/month?')">📈 SIP</button>
           </div>
         </div>
 
@@ -759,8 +963,20 @@
     <!-- ── AI CHAT PAGE ─────────────── -->
     <div id="chat" class="page">
       <div class="page-title">🤖 AI <span>Chat</span></div>
-      <div class="card" style="flex:1">
-        <div class="chat-messages" id="chatMessages" style="height:420px"></div>
+      <div class="card" style="max-width:900px;margin:0 auto;flex:1;width:100%">
+        <div class="chat-messages" id="chatMessages" style="height:420px">
+          <div class="chat-welcome" id="chatPageWelcome">
+            <div class="chat-welcome-icon">🎯</div>
+            <h3>Financial Guidance at Your Fingertips</h3>
+            <p>Ask questions about investments, tax planning, portfolio strategy, SIPs, risk assessment, or any financial topic.</p>
+            <div class="chat-features">
+              <div class="chat-feature-item" onclick="chatQuick('How should I diversify my portfolio?')">📊 Portfolio</div>
+              <div class="chat-feature-item" onclick="chatQuick('Best tax saving strategies for 2024-25')">💸 Tax Strategy</div>
+              <div class="chat-feature-item" onclick="chatQuick('Should I invest in mutual funds or stocks?')">📈 Investments</div>
+              <div class="chat-feature-item" onclick="chatQuick('How much emergency fund do I need?')">🛡️ Emergency Fund</div>
+            </div>
+          </div>
+        </div>
         <div class="chat-input-row">
           <input type="text" id="chatInput" placeholder="Ask anything financial…"
             onkeypress="if(event.key==='Enter') chatSend()">
@@ -770,7 +986,7 @@
     </div>
 
     <!-- ── MONEY SCORE ─────────────── -->
-    <div id="score" class="page">
+    <div id="score" class="page center-page">
       <div class="page-title">💰 Money <span>Score</span></div>
       <div class="card" style="max-width:600px">
         <div class="card-title">Enter your financial details</div>
@@ -790,7 +1006,7 @@
     </div>
 
     <!-- ── SIP CALCULATOR ─────────────── -->
-    <div id="sip" class="page">
+    <div id="sip" class="page center-page">
       <div class="page-title">📈 SIP <span>Calculator</span></div>
       <div class="card" style="max-width:480px">
         <div class="card-title">SIP Projection</div>
@@ -807,7 +1023,7 @@
     </div>
 
     <!-- ── STOCK CHECK ─────────────── -->
-    <div id="stock" class="page">
+    <div id="stock" class="page center-page">
       <div class="page-title">📊 Stock <span>Checker</span></div>
       <div class="card" style="max-width:480px">
         <div class="card-title">Live Stock Price (NSE)</div>
@@ -820,7 +1036,7 @@
     </div>
 
     <!-- ── TAX PLANNER ─────────────── -->
-    <div id="tax" class="page">
+    <div id="tax" class="page center-page">
       <div class="page-title">💸 Tax <span>Planner</span></div>
       <div class="card" style="max-width:480px">
         <div class="card-title">Income Tax Calculator (New Regime)</div>
@@ -833,7 +1049,7 @@
     </div>
 
     <!-- ── PDF PARSER ─────────────── -->
-    <div id="pdf" class="page">
+    <div id="pdf" class="page center-page">
       <div class="page-title">📄 PDF <span>Parser</span></div>
       <div class="card" style="max-width:480px">
         <div class="card-title">Upload Financial Document</div>
@@ -846,7 +1062,7 @@
     </div>
 
     <!-- ── MULTI AGENT ─────────────── -->
-    <div id="agent" class="page">
+    <div id="agent" class="page center-page">
       <div class="page-title">🧠 Multi <span>Agent</span></div>
       <div class="card" style="max-width:600px">
         <div class="card-title">Orchestrated Agent Query</div>
@@ -919,6 +1135,14 @@
     ══════════════════════════════════════════════ */
     function appendMsg(boxId, role, text) {
       const box = document.getElementById(boxId);
+      const dashWelcome = document.getElementById('chatWelcome');
+      const chatWelcome = document.getElementById('chatPageWelcome');
+      if (dashWelcome && !dashWelcome.classList.contains('hidden')) {
+        dashWelcome.classList.add('hidden');
+      }
+      if (chatWelcome && !chatWelcome.classList.contains('hidden')) {
+        chatWelcome.classList.add('hidden');
+      }
       const d = document.createElement('div');
       d.className = `msg ${role}`;
       d.innerHTML = `<div class="sender">${role === 'user' ? 'You' : 'AI Advisor'}</div>${text}`;
@@ -964,6 +1188,11 @@
         appendMsg('chatMessages', 'bot', '⚠ Could not reach server.');
       }
       setLoading('chatBtn', false);
+    }
+
+    function chatQuick(text) {
+      document.getElementById('chatInput').value = text;
+      chatSend();
     }
 
     /* ══════════════════════════════════════════════
