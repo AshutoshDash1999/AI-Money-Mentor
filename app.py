@@ -2,9 +2,14 @@ from flask import Flask, request, jsonify, render_template
 import yfinance as yf
 import os
 from groq import Groq
+from dotenv import load_dotenv
 
-# ---------------- 🔐 SET API KEY ----------------
-os.environ["GROQ_API_KEY"] = "YOUR_API_KEY"
+# Load environment variables
+load_dotenv()
+
+# Set default API key ONLY if not already defined in environment
+if not os.getenv("GROQ_API_KEY"):
+    os.environ["GROQ_API_KEY"] = "YOUR_API_KEY"
 
 # ---------------- IMPORT UTILS ----------------
 from utils.sip import calculate_sip
@@ -12,6 +17,7 @@ from utils.tax import calculate_tax
 from utils.pdf_parser import extract_income
 from utils.money_score import calculate_money_score
 from utils.multi_agent import run_multi_agent
+from utils.stock import get_stock_price
 
 app = Flask(__name__)
 
@@ -66,20 +72,8 @@ def sip():
 def portfolio():
     try:
         stock = request.json["stock"].upper()
-
-        # Add .NS for Indian stocks (important!)
-        if not stock.endswith(".NS"):
-            stock = stock + ".NS"
-
-        data = yf.Ticker(stock)
-        hist = data.history(period="5d")
-
-        if hist.empty:
-            return jsonify({"error": "Invalid stock symbol"})
-
-        price = hist["Close"].iloc[-1]
-
-        return jsonify({"price": round(price, 2)})
+        result = get_stock_price(stock)
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)})

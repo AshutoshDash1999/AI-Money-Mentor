@@ -3,6 +3,10 @@
 from groq import Groq
 import os
 import re
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from .sip import calculate_sip
 from .tax import calculate_tax
@@ -10,7 +14,7 @@ from .stock import get_stock_price
 from .money_score import calculate_money_score
 
 # ✅ CORRECT WAY
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY", "YOUR_API_KEY"))
 
 
 # ---------------- 🔍 ROUTER ----------------
@@ -70,8 +74,17 @@ def sip_agent(query):
 def tax_agent(query):
     try:
         income = float(re.findall(r"\d+", query)[0])
-        tax = calculate_tax(income)
-        return f"Estimated Tax: ₹ {tax}"
+        tax_res = calculate_tax(income)
+        new_tax = tax_res["new_regime"]["total_tax"]
+        old_tax = tax_res["old_regime"]["total_tax"]
+        rec = tax_res["recommended"]
+        sav = tax_res["savings"]
+        
+        reply = f"For gross income of ₹{income:,}:\n"
+        reply += f"- Tax under New Regime: ₹{new_tax:,}\n"
+        reply += f"- Tax under Old Regime: ₹{old_tax:,}\n"
+        reply += f"Recommendation: Go with the **{rec}** (saves ₹{sav:,})."
+        return reply
 
     except Exception as e:
         print("TAX ERROR:", e)
@@ -82,10 +95,16 @@ def tax_agent(query):
 def stock_agent(query):
     try:
         symbol = query.split()[-1].upper()
-        price = get_stock_price(symbol)
+        res = get_stock_price(symbol)
 
-        if price:
-            return f"{symbol} Price: ₹ {price}"
+        if isinstance(res, dict) and "error" in res:
+            return f"Error: {res['error']}"
+
+        if isinstance(res, dict) and "price" in res:
+            price = res["price"]
+            actual_symbol = res["symbol"]
+            pe = res["metrics"]["pe_ratio"]
+            return f"{actual_symbol} current price is ₹{price:.2f}. PE Ratio: {pe}."
 
         return "Invalid stock symbol"
 

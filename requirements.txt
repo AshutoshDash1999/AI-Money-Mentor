@@ -4,3 +4,4 @@ yfinance
 groq
 pdfplumber
 langchain
+python-dotenv

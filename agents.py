@@ -1,7 +1,12 @@
 from groq import Groq
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Groq client
-client = Groq(api_key="YOUR_API_KEY")
+client = Groq(api_key=os.getenv("GROQ_API_KEY", "YOUR_API_KEY"))
 
 # -----------------------
 # SIP AGENT

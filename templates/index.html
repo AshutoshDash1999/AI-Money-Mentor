@@ -8,6 +8,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap"
     rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
@@ -994,29 +995,14 @@
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
               <span>Portfolio Allocation</span>
             </div>
-            <div class="alloc-row">
-              <div class="alloc-label"><span>Equity</span><span>40%</span></div>
-              <div class="alloc-track">
-                <div class="alloc-fill" style="width:40%;background:#d4a843"></div>
-              </div>
+            <div style="position: relative; height: 160px; margin-bottom: 15px; display: flex; justify-content: center;">
+              <canvas id="portfolioChart"></canvas>
             </div>
-            <div class="alloc-row">
-              <div class="alloc-label"><span>ELSS</span><span>27%</span></div>
-              <div class="alloc-track">
-                <div class="alloc-fill" style="width:27%;background:#14c8bf"></div>
-              </div>
-            </div>
-            <div class="alloc-row">
-              <div class="alloc-label"><span>Debt</span><span>18%</span></div>
-              <div class="alloc-track">
-                <div class="alloc-fill" style="width:18%;background:#5a6a82"></div>
-              </div>
-            </div>
-            <div class="alloc-row">
-              <div class="alloc-label"><span>Insurance</span><span>15%</span></div>
-              <div class="alloc-track">
-                <div class="alloc-fill" style="width:15%;background:#2ecc8a"></div>
-              </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 10px;">
+              <div style="display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#d4a843"></span> Equity (40%)</div>
+              <div style="display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#14c8bf"></span> ELSS (27%)</div>
+              <div style="display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#5a6a82"></span> Debt (18%)</div>
+              <div style="display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#2ecc8a"></span> Insurance (15%)</div>
             </div>
           </div>
 
@@ -1095,63 +1081,88 @@
     <!-- ── MONEY SCORE ─────────────── -->
     <div id="score" class="page">
       <div class="page-title">Money <span>Score</span></div>
-      <div class="card" style="max-width:600px">
-        <div class="card-title">Enter your financial details</div>
-        <div class="form-grid">
-          <div><label>Monthly Income (₹)</label><input type="number" id="s_income" placeholder="e.g. 80000"></div>
-          <div><label>Monthly Expenses (₹)</label><input type="number" id="s_expenses" placeholder="e.g. 40000"></div>
-          <div><label>Monthly Savings (₹)</label><input type="number" id="s_savings" placeholder="e.g. 20000"></div>
-          <div><label>Investments (₹)</label><input type="number" id="s_invest" placeholder="e.g. 500000"></div>
-          <div><label>Total Debt (₹)</label><input type="number" id="s_debt" placeholder="e.g. 100000"></div>
-          <div><label>Emergency Fund (months)</label><input type="number" id="s_emergency" placeholder="e.g. 6"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; max-width: 900px;">
+        <div class="card">
+          <div class="card-title">Enter your financial details</div>
+          <div class="form-grid">
+            <div><label>Monthly Income (₹)</label><input type="number" id="s_income" placeholder="e.g. 80000"></div>
+            <div><label>Monthly Expenses (₹)</label><input type="number" id="s_expenses" placeholder="e.g. 40000"></div>
+            <div><label>Monthly Savings (₹)</label><input type="number" id="s_savings" placeholder="e.g. 20000"></div>
+            <div><label>Investments (₹)</label><input type="number" id="s_invest" placeholder="e.g. 500000"></div>
+            <div><label>Total Debt (₹)</label><input type="number" id="s_debt" placeholder="e.g. 100000"></div>
+            <div><label>Emergency Fund (₹)</label><input type="number" id="s_emergency" placeholder="e.g. 240000"></div>
+          </div>
+          <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcScore()" id="scoreBtn">Calculate Money Score</button>
+          <div id="scoreResult" class="result-box"></div>
         </div>
-        <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcScore()" id="scoreBtn">Calculate
-          Money Score</button>
-
-        <div id="scoreResult" class="result-box"></div>
+        <div class="card" style="min-height: 380px;">
+          <div class="card-title">Financial Health Breakdown</div>
+          <div style="position: relative; height: 320px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="scoreChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- ── SIP CALCULATOR ─────────────── -->
     <div id="sip" class="page">
       <div class="page-title">SIP <span>Calculator</span></div>
-      <div class="card" style="max-width:480px">
-        <div class="card-title">SIP Projection</div>
-        <label>Monthly Investment (₹)</label>
-        <input type="number" id="sip_monthly" placeholder="e.g. 10000">
-        <label>Annual Return Rate (%)</label>
-        <input type="number" id="sip_rate" placeholder="e.g. 12">
-        <label>Investment Period (Years)</label>
-        <input type="number" id="sip_years" placeholder="e.g. 10">
-        <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcSIP()"
-          id="sipBtn">Calculate</button>
-        <div id="sipResult" class="result-box"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; max-width: 900px;">
+        <div class="card">
+          <div class="card-title">SIP Projection</div>
+          <label>Monthly Investment (₹)</label>
+          <input type="number" id="sip_monthly" placeholder="e.g. 10000">
+          <label>Annual Return Rate (%)</label>
+          <input type="number" id="sip_rate" placeholder="e.g. 12">
+          <label>Investment Period (Years)</label>
+          <input type="number" id="sip_years" placeholder="e.g. 10">
+          <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcSIP()" id="sipBtn">Calculate</button>
+          <div id="sipResult" class="result-box"></div>
+        </div>
+        <div class="card" style="min-height: 380px;">
+          <div class="card-title">Wealth Growth Curve</div>
+          <div style="position: relative; height: 320px;">
+            <canvas id="sipChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- ── STOCK CHECK ─────────────── -->
     <div id="stock" class="page">
       <div class="page-title">Stock <span>Checker</span></div>
-      <div class="card" style="max-width:480px">
-        <div class="card-title">Live Stock Price (NSE)</div>
-        <label>Stock Symbol</label>
-        <input type="text" id="stockSym" placeholder="e.g. TCS, RELIANCE, INFY">
-        <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="checkStock()" id="stockBtn">Get
-          Price</button>
-        <div id="stockResult" class="result-box"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; max-width: 900px;">
+        <div class="card">
+          <div class="card-title">Live Stock Price (NSE/Global)</div>
+          <label>Stock Symbol</label>
+          <input type="text" id="stockSym" placeholder="e.g. TCS, RELIANCE, AAPL">
+          <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="checkStock()" id="stockBtn">Get Price</button>
+          <div id="stockResult" class="result-box"></div>
+        </div>
+        <div class="card" style="min-height: 380px;">
+          <div class="card-title">30-Day Historical Trend</div>
+          <div style="position: relative; height: 320px;">
+            <canvas id="stockChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- ── TAX PLANNER ─────────────── -->
     <div id="tax" class="page">
       <div class="page-title">Tax <span>Planner</span></div>
-      <div class="card" style="max-width:480px">
-        <div class="card-title">Income Tax Calculator (New Regime)</div>
-        <label>Annual Income (₹)</label>
-        <input type="number" id="taxIncome" placeholder="e.g. 1200000">
-        <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcTax()" id="taxBtn">Calculate
-          Tax</button>
-        <div id="taxResult" class="result-box"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: start; max-width: 950px;">
+        <div class="card">
+          <div class="card-title">Income Tax Calculator</div>
+          <label>Gross Annual Income (₹)</label>
+          <input type="number" id="taxIncome" placeholder="e.g. 1200000">
+          <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcTax()" id="taxBtn">Calculate Tax</button>
+          <div id="taxResult" class="result-box"></div>
+        </div>
+        <div class="card" id="taxComparisonCard" style="display:none; min-height: 280px;">
+          <div class="card-title">Regime Comparison (Old vs. New)</div>
+          <div id="taxComparisonResult"></div>
+        </div>
       </div>
     </div>
 
@@ -1236,6 +1247,43 @@
   </div>
 
   <script>
+    /* ══════════════════════════════════════════════
+       GLOBAL CHART INSTANCES & HELPERS
+    ══════════════════════════════════════════════ */
+    let sipChartInstance = null;
+    let stockChartInstance = null;
+    let scoreChartInstance = null;
+    let portfolioChartInstance = null;
+
+    function initPortfolioChart() {
+      const canvasEl = document.getElementById('portfolioChart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      portfolioChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Equity', 'ELSS', 'Debt', 'Insurance'],
+          datasets: [{
+            data: [40, 27, 18, 15],
+            backgroundColor: ['#d4a843', '#14c8bf', '#5a6a82', '#2ecc8a'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initPortfolioChart();
+    });
+
     /* ══════════════════════════════════════════════
        NAVIGATION
     ══════════════════════════════════════════════ */
@@ -1438,23 +1486,72 @@
           const circumference = 339.292;
           const offset = circumference - (data.score / 100) * circumference;
           showResult('scoreResult', `
-        <div style="text-align:center;margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Your Money Score</div>
-          <div class="score-container">
-            <svg class="score-circle-svg">
-              <circle class="score-circle-bg" cx="65" cy="65" r="54" />
-              <circle class="score-circle-bar" cx="65" cy="65" r="54" 
-                      stroke="${color}" 
-                      stroke-dasharray="${circumference}" 
-                      stroke-dashoffset="${offset}" />
-            </svg>
-            <div class="score-text-overlay">
-              <div style="font-family:'Outfit',sans-serif;font-size:42px;font-weight:800;color:${color}">${data.score}</div>
-              <div style="font-size:11px;font-weight:600;color:var(--text);margin-top:-2px">${data.status}</div>
+            <div style="text-align:center;margin-bottom:10px">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Your Money Score</div>
+              <div class="score-container">
+                <svg class="score-circle-svg">
+                  <circle class="score-circle-bg" cx="65" cy="65" r="54" />
+                  <circle class="score-circle-bar" cx="65" cy="65" r="54" 
+                          stroke="${color}" 
+                          stroke-dasharray="${circumference}" 
+                          stroke-dashoffset="${offset}" />
+                </svg>
+                <div class="score-text-overlay">
+                  <div style="font-family:'Outfit',sans-serif;font-size:42px;font-weight:800;color:${color}">${data.score}</div>
+                  <div style="font-size:11px;font-weight:600;color:var(--text);margin-top:-2px">${data.status}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      `);
+          `);
+
+          // Compute sub-scores locally for visual rendering
+          const savingsRateVal = parseFloat(savings) / parseFloat(income);
+          const savingsScore = savingsRateVal >= 0.3 ? 30 : savingsRateVal >= 0.2 ? 20 : 10;
+
+          const investRateVal = parseFloat(invest) / parseFloat(income);
+          const investScore = investRateVal >= 0.2 ? 25 : investRateVal >= 0.1 ? 15 : 5;
+
+          const debtRatioVal = parseFloat(debt) / parseFloat(income);
+          const debtScore = debtRatioVal <= 0.2 ? 25 : debtRatioVal <= 0.4 ? 15 : 5;
+
+          const monthsCoverVal = parseFloat(emergency) / parseFloat(expenses);
+          const emergencyScore = monthsCoverVal >= 6 ? 20 : monthsCoverVal >= 3 ? 10 : 5;
+
+          // Draw Horizontal Bar Chart
+          if (scoreChartInstance) scoreChartInstance.destroy();
+          const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+          scoreChartInstance = new Chart(scoreCtx, {
+            type: 'bar',
+            data: {
+              labels: ['Savings Rate', 'Investment Rate', 'Debt Ratio', 'Emergency Fund'],
+              datasets: [{
+                label: 'Your Score',
+                data: [savingsScore, investScore, debtScore, emergencyScore],
+                backgroundColor: ['#d4a843', '#14c8bf', '#5a6a82', '#2ecc8a'],
+                borderRadius: 6,
+                barThickness: 16
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: { color: '#5a6a82' },
+                  max: 30
+                },
+                y: {
+                  grid: { display: false },
+                  ticks: { color: '#eef0f5' }
+                }
+              }
+            }
+          });
         }
       } catch (e) {
         showResult('scoreResult', '⚠ Could not reach server.');
@@ -1488,13 +1585,82 @@
         } else {
           const fv = data.future_value;
           showResult('sipResult', `
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Estimated Future Value</div>
-        <div class="result-big">₹${fmtNum(fv)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">
-          Invested: ₹${fmtNum(monthly * years * 12)} &nbsp;·&nbsp; 
-          Gains: ₹${fmtNum(fv - monthly * years * 12)}
-        </div>
-      `);
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Estimated Future Value</div>
+            <div class="result-big">₹${fmtNum(fv)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">
+              Invested: ₹${fmtNum(monthly * years * 12)} &nbsp;·&nbsp; 
+              Gains: ₹${fmtNum(fv - monthly * years * 12)}
+            </div>
+          `);
+
+          // Compute compounding points
+          const monthlyFloat = parseFloat(monthly);
+          const rateFloat = parseFloat(rate);
+          const yearsInt = parseInt(years);
+
+          const labels = [];
+          const investedData = [];
+          const totalData = [];
+
+          const r = rateFloat / 100 / 12;
+          for (let y = 1; y <= yearsInt; y++) {
+            const n = y * 12;
+            const fv_point = monthlyFloat * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+            const invested_point = monthlyFloat * n;
+            labels.push(`Year ${y}`);
+            investedData.push(Math.round(invested_point));
+            totalData.push(Math.round(fv_point));
+          }
+
+          // Draw compounding line chart
+          if (sipChartInstance) sipChartInstance.destroy();
+          const sipCtx = document.getElementById('sipChart').getContext('2d');
+          sipChartInstance = new Chart(sipCtx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Est. Wealth Value',
+                  data: totalData,
+                  borderColor: '#d4a843',
+                  backgroundColor: 'rgba(212, 168, 67, 0.1)',
+                  fill: true,
+                  tension: 0.3
+                },
+                {
+                  label: 'Amount Invested',
+                  data: investedData,
+                  borderColor: '#5a6a82',
+                  backgroundColor: 'transparent',
+                  borderDash: [5, 5],
+                  tension: 0.1
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: { color: '#eef0f5', font: { family: 'Instrument Sans' } }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: { color: '#5a6a82' }
+                },
+                y: {
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: {
+                    color: '#5a6a82',
+                    callback: function(value) { return '₹' + fmtNum(value); }
+                  }
+                }
+              }
+            }
+          });
         }
       } catch (e) {
         showResult('sipResult', '⚠ Could not reach server.');
@@ -1516,11 +1682,73 @@
         if (data.error) {
           showResult('stockResult', `⚠ ${data.error}`);
         } else {
-          showResult('stockResult', `
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${sym.toUpperCase()}.NS — Last Close</div>
-        <div class="result-big">₹${fmtNum(data.price)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Data from Yahoo Finance</div>
-      `);
+          // Display Stock details table
+          const metrics = data.metrics || {};
+          const pe = metrics.pe_ratio !== "N/A" && metrics.pe_ratio !== null ? parseFloat(metrics.pe_ratio).toFixed(1) : "N/A";
+          let cap = metrics.market_cap;
+          if (cap && cap !== "N/A") {
+            if (cap >= 1e12) cap = (cap / 1e12).toFixed(2) + "T";
+            else if (cap >= 1e9) cap = (cap / 1e9).toFixed(2) + "B";
+            else if (cap >= 1e7) cap = (cap / 1e7).toFixed(2) + "Cr";
+            else if (cap >= 1e5) cap = (cap / 1e5).toFixed(2) + "L";
+          } else {
+            cap = "N/A";
+          }
+
+          let html = `
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">${data.symbol} — Last Price</div>
+            <div class="result-big">₹${fmtNum(data.price)}</div>
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
+              <div style="display:flex; justify-content:space-between"><span>52W High</span><strong>₹${metrics.high_52w !== "N/A" && metrics.high_52w !== null ? fmtNum(metrics.high_52w) : "N/A"}</strong></div>
+              <div style="display:flex; justify-content:space-between"><span>52W Low</span><strong>₹${metrics.low_52w !== "N/A" && metrics.low_52w !== null ? fmtNum(metrics.low_52w) : "N/A"}</strong></div>
+              <div style="display:flex; justify-content:space-between"><span>Market Cap</span><strong>${cap}</strong></div>
+              <div style="display:flex; justify-content:space-between"><span>P/E Ratio</span><strong>${pe}</strong></div>
+            </div>
+          `;
+          showResult('stockResult', html);
+
+          // Draw Stock history chart
+          const dates = data.history.map(h => h.date);
+          const prices = data.history.map(h => h.close);
+
+          if (stockChartInstance) stockChartInstance.destroy();
+          const stockCtx = document.getElementById('stockChart').getContext('2d');
+          stockChartInstance = new Chart(stockCtx, {
+            type: 'line',
+            data: {
+              labels: dates,
+              datasets: [{
+                label: data.symbol,
+                data: prices,
+                borderColor: '#14c8bf',
+                backgroundColor: 'rgba(20, 200, 191, 0.05)',
+                fill: true,
+                tension: 0.1,
+                pointRadius: 1,
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { color: '#5a6a82', maxTicksLimit: 6 }
+                },
+                y: {
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: {
+                    color: '#5a6a82',
+                    callback: function(value) { return '₹' + fmtNum(value); }
+                  }
+                }
+              }
+            }
+          });
         }
       } catch (e) {
         showResult('stockResult', '⚠ Could not reach server.');
@@ -1542,13 +1770,64 @@
         if (data.error) {
           showResult('taxResult', `⚠ ${data.error}`);
         } else {
-          const tax = data.tax;
-          const eff = ((tax / parseFloat(income)) * 100).toFixed(1);
+          const taxRes = data.tax;
+          document.getElementById('taxComparisonCard').style.display = 'block';
+
+          let tableHtml = `
+            <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left; color:var(--text);">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border); color:var(--muted); font-size:11px; text-transform:uppercase;">
+                  <th style="padding:10px 0;">Particulars</th>
+                  <th style="padding:10px 0;">Old Regime</th>
+                  <th style="padding:10px 0; color:var(--gold);">New Regime</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:10px 0;">Gross Income</td>
+                  <td style="padding:10px 0;">₹${fmtNum(taxRes.gross_income)}</td>
+                  <td style="padding:10px 0; color:var(--gold);">₹${fmtNum(taxRes.gross_income)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:10px 0;">Std Deduction</td>
+                  <td style="padding:10px 0;">-₹${fmtNum(taxRes.old_regime.standard_deduction)}</td>
+                  <td style="padding:10px 0; color:var(--gold);">-₹${fmtNum(taxRes.new_regime.standard_deduction)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:10px 0;">Taxable Income</td>
+                  <td style="padding:10px 0;">₹${fmtNum(taxRes.old_regime.taxable_income)}</td>
+                  <td style="padding:10px 0; color:var(--gold);">₹${fmtNum(taxRes.new_regime.taxable_income)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:10px 0;">Base Tax</td>
+                  <td style="padding:10px 0;">₹${fmtNum(taxRes.old_regime.base_tax)}</td>
+                  <td style="padding:10px 0; color:var(--gold);">₹${fmtNum(taxRes.new_regime.base_tax)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:10px 0;">Cess (4%)</td>
+                  <td style="padding:10px 0;">₹${fmtNum(taxRes.old_regime.cess)}</td>
+                  <td style="padding:10px 0; color:var(--gold);">₹${fmtNum(taxRes.new_regime.cess)}</td>
+                </tr>
+                <tr style="font-weight:700; font-size:15px; border-bottom:2px solid var(--border);">
+                  <td style="padding:12px 0;">Total Tax</td>
+                  <td style="padding:12px 0;">₹${fmtNum(taxRes.old_regime.total_tax)}</td>
+                  <td style="padding:12px 0; color:#2ecc8a;">₹${fmtNum(taxRes.new_regime.total_tax)}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div style="margin-top:16px; padding:12px 14px; background:rgba(46,204,138,0.08); border:1px solid rgba(46,204,138,0.2); border-radius:8px; color:#2ecc8a; font-size:13px; line-height:1.5;">
+              <strong>Recommendation:</strong> Select the <strong>${taxRes.recommended}</strong>.<br/>
+              You will save <strong>₹${fmtNum(taxRes.savings)}</strong> annually with this regime.
+            </div>
+          `;
+          document.getElementById('taxComparisonResult').innerHTML = tableHtml;
+
           showResult('taxResult', `
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Total Tax Payable</div>
-        <div class="result-big">₹${fmtNum(tax)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">Effective Rate: ${eff}% &nbsp;·&nbsp; Take-home: ₹${fmtNum(parseFloat(income) - tax)}/yr</div>
-      `);
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Tax Payable (${taxRes.recommended})</div>
+            <div class="result-big" style="color:#2ecc8a;">₹${fmtNum(taxRes.recommended === "New Regime" ? taxRes.new_regime.total_tax : taxRes.old_regime.total_tax)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Annual Savings: ₹${fmtNum(taxRes.savings)}</div>
+          `);
         }
       } catch (e) {
         showResult('taxResult', '⚠ Could not reach server.');
@@ -1572,8 +1851,49 @@
         if (data.error) {
           showResult('pdfResult', `⚠ ${data.error}`);
         } else {
-          const content = data.data || data.text || JSON.stringify(data);
-          showResult('pdfResult', `<pre style="white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:12px">${content}</pre>`);
+          // Parse structured document data
+          if (data.data && typeof data.data === 'object') {
+            const docData = data.data;
+            const docType = docData.document_type || "Unknown Document";
+            const emp = docData.employer_organization || "N/A";
+            const gross = docData.gross_income ? "₹" + fmtNum(docData.gross_income) : "N/A";
+            const tds = docData.tax_deducted_tds ? "₹" + fmtNum(docData.tax_deducted_tds) : "N/A";
+            const score = docData.confidence_score ? (docData.confidence_score * 100).toFixed(0) + "%" : "N/A";
+            const summary = docData.summary_findings || "No summary available.";
+
+            let deductionsHtml = "";
+            if (docData.allowances_deductions && Object.keys(docData.allowances_deductions).length > 0) {
+              deductionsHtml = Object.entries(docData.allowances_deductions)
+                .map(([k, v]) => `<div style="display:flex; justify-content:space-between"><span>${k}:</span> <strong>₹${fmtNum(v)}</strong></div>`)
+                .join("");
+            } else {
+              deductionsHtml = "None detected";
+            }
+
+            let html = `
+              <div style="font-size:13px; font-weight:700; color:var(--gold); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;">
+                Parsed: ${docType} (Confidence: ${score})
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between;"><span>Issuer / Employer:</span> <strong>${emp}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>Gross Income:</span> <strong>${gross}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>TDS (Tax Deducted):</span> <strong>${tds}</strong></div>
+                <div style="margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px;">
+                  <span style="font-size:10px; color:var(--muted); text-transform:uppercase;">Deductions & Allowances:</span>
+                  <div style="margin-top:4px; display:flex; flex-direction:column; gap:4px;">
+                    ${deductionsHtml}
+                  </div>
+                </div>
+                <div style="margin-top:6px; font-size:11px; color:var(--teal); font-style:italic; background:rgba(20,200,191,0.05); padding:8px; border-radius:6px; line-height:1.4;">
+                  💡 ${summary}
+                </div>
+              </div>
+            `;
+            showResult('pdfResult', html);
+          } else {
+            const content = data.data || data.text || JSON.stringify(data);
+            showResult('pdfResult', `<pre style="white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:12px">${content}</pre>`);
+          }
         }
       } catch (e) {
         showResult('pdfResult', '⚠ Could not reach server.');
