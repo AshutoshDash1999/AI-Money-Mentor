@@ -63,7 +63,7 @@ def insights(client, expenses):
     """
 
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        model="llama-3.1-8b-instant",
         messages= [
             {'role':'user', 'content':prompt},
             {'role':'system', 'content': "You are AI-Money Mentor who helps to analyze the expense given by the user and provide the personalized insights"}

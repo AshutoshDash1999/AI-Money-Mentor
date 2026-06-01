@@ -676,6 +676,59 @@
       border-radius: 4px;
     }
 
+    /* ── MOBILE HEADER & OVERLAY ──────────────────── */
+    .mobile-header {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      width: 100%;
+    }
+
+    .menu-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      transition: opacity 0.2s;
+    }
+
+    .menu-toggle-btn:hover {
+      opacity: 0.8;
+    }
+
+    .mobile-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 998;
+    }
+
+    .menu-overlay.active {
+      display: block;
+    }
+
     /* ── RESPONSIVE ───────────────────────────────── */
     @media (max-width: 1100px) {
       .stats-row {
@@ -688,8 +741,32 @@
     }
 
     @media (max-width: 800px) {
+      body {
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      .mobile-header {
+        display: flex;
+      }
+
       .sidebar {
-        display: none;
+        position: fixed;
+        left: -220px;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 100vh;
+      }
+
+      .sidebar.open {
+        left: 0;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+      }
+
+      .main {
+        padding: 20px 16px;
       }
 
       .dash-grid {
@@ -756,6 +833,15 @@
 </head>
 
 <body>
+
+  <!-- Menu Overlay for Mobile Drawer -->
+  <div class="menu-overlay"></div>
+
+  <!-- Mobile Top Navigation Header -->
+  <div class="mobile-header">
+    <button class="menu-toggle-btn" onclick="toggleMobileMenu()">☰</button>
+    <div class="mobile-logo">₹ Money Mentor</div>
+  </div>
 
   <!-- ══════════ SIDEBAR ══════════ -->
   <div class="sidebar">
@@ -1223,20 +1309,49 @@
       initPortfolioChart();
     });
 
-    /* ══════════════════════════════════════════════
-       NAVIGATION
-    ══════════════════════════════════════════════ */
+    /* ── NAVIGATION ──────────────────────────────── */
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.querySelector('.menu-overlay');
+      if (sidebar && overlay) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+      }
+    }
+
     function showPage(name, e) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById(name).classList.add('active');
+      
+      const targetPage = document.getElementById(name);
+      if (targetPage) targetPage.classList.add('active');
+      
       document.querySelector(`.nav-item[data-page="${name}"]`)?.classList.add('active');
+
+      // Automatically close drawer menu on mobile
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.querySelector('.menu-overlay');
+      if (sidebar && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      }
     }
 
     document.querySelectorAll('.nav-item').forEach(el => {
       el.addEventListener('click', function (e) {
         showPage(this.dataset.page, e);
       });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.querySelector('.menu-overlay');
+      if (overlay) {
+        overlay.addEventListener('click', () => {
+          const sidebar = document.querySelector('.sidebar');
+          if (sidebar) sidebar.classList.remove('open');
+          overlay.classList.remove('active');
+        });
+      }
     });
 
     /* ══════════════════════════════════════════════
