@@ -154,15 +154,23 @@ expense_data = []
 def add_expense():
     try:
         data = request.json
+
+        print("RECEIVED:", data)   # ADD THIS
+
         expense = {
             "category": data["category"],
             "amount": float(data["amount"]),
             "date": data["date"]
         }
+
         expense_data.append(expense)
+
+        print("ALL EXPENSES:", expense_data)   # ADD THIS
+
         return jsonify({"status": "success"})
-    
+
     except Exception as e:
+        print("ERROR:", str(e))   # ADD THIS
         return jsonify({"error": str(e)}),400
 
 @app.route("/calculate", methods=["GET"])
