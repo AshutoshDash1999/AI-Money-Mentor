@@ -132,9 +132,15 @@ def sip():
         result = calculate_sip(
             float(data["monthly"]),
             float(data["rate"]),
-            int(data["years"])
+            int(data["years"]),
+            float(data.get("inflation", 0.0))
         )
-        return jsonify({"future_value": result})
+        return jsonify({
+            "future_value": result["nominal_value"],
+            "nominal_value": result["nominal_value"],
+            "inflation_adjusted_value": result["inflation_adjusted_value"],
+            "inflation_applied": result["inflation_applied"]
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)})
