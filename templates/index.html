@@ -1690,7 +1690,23 @@ pointer;
 <div id="sip" class="page">
   <div class="page-title">📈 SIP <span>Calculator</span></div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; max-width: 900px;">
+    <!-- ── SIP CALCULATOR ─────────────── -->
+    <div id="sip" class="page center-page">
+      <div class="page-title">📈 SIP <span>Calculator</span></div>
+      <div class="card" style="max-width:480px">
+        <div class="card-title">SIP Projection</div>
+        <label>Monthly Investment (₹)</label>
+        <input type="number" id="sip_monthly" placeholder="e.g. 10000">
+        <label>Annual Return Rate (%)</label>
+        <input type="number" id="sip_rate" placeholder="e.g. 12">
+        <label>Investment Period (Years)</label>
+        <input type="number" id="sip_years" placeholder="e.g. 10">
+        <button class="btn btn-gold" style="margin-top:16px;width:100%" onclick="calcSIP()"
+          id="sipBtn">Calculate</button>
+        <div id="sipResult" class="result-box"></div>
+        <canvas id="sipChart" style="margin-top:20px;max-height:300px;display:none"></canvas>
+      </div>
+    </div>
 
     <div class="card">
       <div class="card-title">SIP Projection</div>
@@ -2417,6 +2433,164 @@ dashSend();
               </div>
             </div>
           `);
+
+          // Compute sub-scores locally for visual rendering
+          const savingsRateVal = parseFloat(savings) / parseFloat(income);
+          const savingsScore = savingsRateVal >= 0.3 ? 30 : savingsRateVal >= 0.2 ? 20 : 10;
+
+          const investRateVal = parseFloat(invest) / parseFloat(income);
+          const investScore = investRateVal >= 0.2 ? 25 : investRateVal >= 0.1 ? 15 : 5;
+
+          const debtRatioVal = parseFloat(debt) / parseFloat(income);
+          const debtScore = debtRatioVal <= 0.2 ? 25 : debtRatioVal <= 0.4 ? 15 : 5;
+
+          const monthsCoverVal = parseFloat(emergency) / parseFloat(expenses);
+          const emergencyScore = monthsCoverVal >= 6 ? 20 : monthsCoverVal >= 3 ? 10 : 5;
+
+          // Draw Horizontal Bar Chart
+          if (scoreChartInstance) scoreChartInstance.destroy();
+          const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+          scoreChartInstance = new Chart(scoreCtx, {
+            type: 'bar',
+            data: {
+              labels: ['Savings Rate', 'Investment Rate', 'Debt Ratio', 'Emergency Fund'],
+              datasets: [{
+                label: 'Your Score',
+                data: [savingsScore, investScore, debtScore, emergencyScore],
+                backgroundColor: ['#d4a843', '#14c8bf', '#5a6a82', '#2ecc8a'],
+                borderRadius: 6,
+                barThickness: 16
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: { color: '#5a6a82' },
+                  max: 30
+                },
+                y: {
+                  grid: { display: false },
+                  ticks: { color: '#eef0f5' }
+                }
+              }
+            }
+          });
+        }
+      } catch (e) {
+        showResult('scoreResult', '⚠ Could not reach server.');
+      }
+      setLoading('scoreBtn', false);
+    }
+
+    /* ══════════════════════════════════════════════
+       SIP → POST /sip
+    ══════════════════════════════════════════════ */
+    async function calcSIP() {
+  const monthly = parseFloat(document.getElementById('sip_monthly').value);
+  const rate = parseFloat(document.getElementById('sip_rate').value);
+  const years = parseInt(document.getElementById('sip_years').value);
+
+  if (!monthly || !rate || !years) {
+    showResult('sipResult', '⚠ Please fill all fields.');
+    return;
+  }
+
+  // Input validation
+  if (rate <= 0 || rate > 50) {
+    showResult('sipResult', '⚠ Annual Return Rate should be between 1% and 50%.');
+    return;
+  }
+  if (monthly <= 0) {
+    showResult('sipResult', '⚠ Monthly investment should be greater than 0.');
+    return;
+  }
+  if (years <= 0 || years > 50) {
+    showResult('sipResult', '⚠ Investment period should be between 1 and 50 years.');
+    return;
+  }
+
+  document.getElementById('sipBtn').disabled = true;
+  document.getElementById('sipBtn').innerHTML = '<span class="spinner"></span>';
+
+  // Frontend SIP calculation — no backend needed
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  const fv = monthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+
+  showResult('sipResult', `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Estimated Future Value</div>
+    <div class="result-big">₹${fmtNum(fv)}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px">
+      Invested: ₹${fmtNum(monthly * years * 12)} &nbsp;·&nbsp; 
+      Gains: ₹${fmtNum(fv - monthly * years * 12)}
+    </div>
+  `);
+
+  // Chart
+  const labels = [];
+  const investedData = [];
+  const totalData = [];
+
+  for (let y = 1; y <= years; y++) {
+    const n2 = y * 12;
+    const fv_point = monthly * ((Math.pow(1 + r, n2) - 1) / r) * (1 + r);
+    labels.push(`Year ${y}`);
+    investedData.push(Math.round(monthly * n2));
+    totalData.push(Math.round(fv_point));
+  }
+
+  if (sipChartInstance) sipChartInstance.destroy();
+  const sipCtx = document.getElementById('sipChart').getContext('2d');
+  sipChartInstance = new Chart(sipCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Est. Wealth Value',
+          data: totalData,
+          borderColor: '#d4a843',
+          backgroundColor: 'rgba(212, 168, 67, 0.1)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Amount Invested',
+          data: investedData,
+          borderColor: '#5a6a82',
+          backgroundColor: 'transparent',
+          borderDash: [5, 5],
+          tension: 0.1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#eef0f5', font: { family: 'Instrument Sans' } } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#5a6a82' } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#5a6a82', callback: v => '₹' + fmtNum(v) }
+        }
+      }
+    }
+  });
+  document.getElementById('sipChart').style.display = 'block';
+  document.getElementById('sipBtn').disabled = false;
+  document.getElementById('sipBtn').innerHTML = 'Calculate';
+}
+
 
                             // Compute sub-scores locally for visual rendering
                             const savingsRateVal = parseFloat(savings) / parseFloat(income);
