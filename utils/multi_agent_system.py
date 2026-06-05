@@ -4,6 +4,7 @@ Specialized agents for different financial domains with smart routing
 """
 
 from typing import Dict, List, Tuple
+from urllib import response
 from groq import Groq
 import re
 
@@ -39,7 +40,7 @@ Provide expert, actionable advice based on your specialization. Be specific and 
                     {"role": "user", "content": query}
                 ],
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=1500
             )
             
             elapsed = time.time() - start
