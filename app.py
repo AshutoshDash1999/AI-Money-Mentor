@@ -370,15 +370,6 @@ def delete_item():
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     debug_mode = os.getenv("FLASK_DEBUG", "False").lower() in ("true", "1", "yes")
-
     app.run(debug=debug_mode)
-from flask import Flask, render_template
 
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-    app.run(debug=debug_mode)
 
