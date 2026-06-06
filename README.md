@@ -155,3 +155,71 @@ pytest tests/test_tax.py -v
 </a>
 
 
+
+
+
+## 🔑 Environment Variables
+
+Create a `.env` file in the project root directory:
+
+```env
+GROQ_API_KEY=your_api_key_here
+```
+
+Generate your API key from:
+https://console.groq.com
+
+---
+
+## 📂 Project Structure
+
+```text
+AI-Money-Mentor/
+│
+├── .github/
+├── templates/
+├── utils/
+├── app.py
+├── agents.py
+├── requirements.txt
+├── README.md
+└── SECURITY.md
+```
+
+
+We welcome contributions from the open-source community.
+
+### Steps to Contribute
+
+1. Fork the repository
+2. Clone your fork locally
+3. Create a feature branch
+4. Make your changes
+5. Commit your changes
+6. Push your branch
+7. Open a Pull Request
+
+Please ensure your code is tested and follows project conventions before submitting a PR.
+
+---
+
+## ⚡ Quick Start
+
+```bash
+git clone https://github.com/omroy07/AI-Money-Mentor.git
+
+cd AI-Money-Mentor
+
+python -m venv venv
+
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python app.py
+```
+
+Open:
+
+http://127.0.0.1:5000
+
