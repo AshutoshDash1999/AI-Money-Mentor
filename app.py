@@ -102,6 +102,9 @@ def bad_request(error):
 
 @app.errorhandler(404)
 def not_found(error):
+    # Return HTML page for browser navigation, JSON for API clients
+    if request.accept_mimetypes.accept_html and not request.accept_mimetypes.accept_json:
+        return render_template("404.html", active_page=None), 404
     return jsonify({
         "error": "Not Found",
         "message": "The requested endpoint does not exist.",
