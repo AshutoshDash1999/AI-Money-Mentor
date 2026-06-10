@@ -287,7 +287,10 @@ def create_alert():
         if condition not in ("above", "below"):
             return jsonify({"error": "Invalid condition value"}), 400
             
-        alert = PriceAlert(symbol=symbol, target_price=target_price, condition=condition)
+        alert = PriceAlert()
+        alert.symbol = symbol
+        alert.target_price = target_price
+        alert.condition = condition
         db.session.add(alert)
         db.session.commit()
         return jsonify(alert.to_dict()), 201
@@ -456,11 +459,10 @@ def add_expense():
         amount = validate_float(data.get("amount"), "amount", min_val=0.01)
         date = validate_string(data.get("date"), "date")
 
-        expense = Expense(
-            category=category,
-            amount=amount,
-            date=date
-        )
+        expense = Expense()
+        expense.category = category
+        expense.amount = amount
+        expense.date = date
         db.session.add(expense)
         db.session.commit()
         
@@ -470,6 +472,53 @@ def add_expense():
         
         return jsonify({"status": "success"})
 
+    except ValidationError as e:
+        raise e
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/expense/<int:expense_id>", methods=["PUT", "DELETE"])
+def expense_detail(expense_id):
+    try:
+        expense = Expense.query.get(expense_id)
+        if not expense:
+            return jsonify({"error": f"Expense with id {expense_id} not found."}), 404
+
+        if request.method == "DELETE":
+            category = expense.category
+            ym = expense.date[:7] if len(expense.date) >= 7 else None
+            
+            db.session.delete(expense)
+            db.session.commit()
+            
+            if ym:
+                run_threshold_checks(category, ym)
+                
+            return jsonify({"status": "success"})
+        else:  # PUT
+            data = request.json or {}
+            if not isinstance(data, dict):
+                raise ValidationError("Request body must be a JSON object")
+            
+            if "category" in data:
+                new_cat = validate_string(data["category"], "category")
+                if new_cat != expense.category:
+                    expense.user_corrected = True
+                    if not expense.original_ai_category:
+                        expense.original_ai_category = expense.category
+                    expense.category = new_cat
+            if "amount" in data:
+                expense.amount = validate_float(data["amount"], "amount", min_val=0.01)
+            if "date" in data:
+                expense.date = validate_string(data["date"], "date")
+                
+            db.session.commit()
+            
+            ym = expense.date[:7] if len(expense.date) >= 7 else None
+            if ym:
+                run_threshold_checks(expense.category, ym)
+                
+            return jsonify({"status": "success", "expense": expense.to_dict()})
     except ValidationError as e:
         raise e
     except Exception as e:
@@ -523,7 +572,9 @@ def add_asset():
         name = validate_string(data.get("name"), "name")
         amount = validate_float(data.get("amount"), "amount", min_val=0.0)
         
-        asset = Asset(name=name, amount=amount)
+        asset = Asset()
+        asset.name = name
+        asset.amount = amount
         db.session.add(asset)
         db.session.commit()
         return jsonify({"status": "success"})
@@ -541,7 +592,9 @@ def add_liability():
         name = validate_string(data.get("name"), "name")
         amount = validate_float(data.get("amount"), "amount", min_val=0.0)
         
-        liability = Liability(name=name, amount=amount)
+        liability = Liability()
+        liability.name = name
+        liability.amount = amount
         db.session.add(liability)
         db.session.commit()
         return jsonify({"status": "success"})
@@ -605,11 +658,10 @@ def run_threshold_checks(category, year_month=None):
                 threshold=threshold
             ).first()
             if not exists:
-                alert = BudgetAlert(
-                    category=category,
-                    year_month=year_month,
-                    threshold=threshold
-                )
+                alert = BudgetAlert()
+                alert.category = category
+                alert.year_month = year_month
+                alert.threshold = threshold
                 db.session.add(alert)
                 triggered.append(threshold)
                 print(
@@ -639,7 +691,9 @@ def budget_limits():
             if limit:
                 limit.limit_amount = limit_amount
             else:
-                limit = BudgetLimit(category=category, limit_amount=limit_amount)
+                limit = BudgetLimit()
+                limit.category = category
+                limit.limit_amount = limit_amount
                 db.session.add(limit)
             db.session.commit()
             return jsonify({"status": "success"})
@@ -723,12 +777,11 @@ def goals():
         current_amount = validate_float(data.get("current_amount", 0.0), "current_amount", min_val=0.0)
         target_date = validate_string(data.get("target_date"), "target_date")
 
-        goal = FinancialGoal(
-            name=name,
-            target_amount=target_amount,
-            current_amount=current_amount,
-            target_date=target_date
-        )
+        goal = FinancialGoal()
+        goal.name = name
+        goal.target_amount = target_amount
+        goal.current_amount = current_amount
+        goal.target_date = target_date
         db.session.add(goal)
         db.session.commit()
         return jsonify({"status": "success", "goal": goal.to_dict()})
