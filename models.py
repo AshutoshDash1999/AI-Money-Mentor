@@ -178,23 +178,48 @@ class FinancialGoal(db.Model):
         }
 
 
-class FinancialGoalMilestone(db.Model):
-    __tablename__ = "financial_goal_milestones"
+# ---------------- WEEKLY DIGEST (Scheduled AI) ----------------
+class DigestPreference(db.Model):
+    """Single-row preference store (no user table in current app)."""
+    __tablename__ = "digest_preferences"
     id = db.Column(db.Integer, primary_key=True)
-    goal_id = db.Column(db.Integer, db.ForeignKey("financial_goals.id"), nullable=False, index=True)
-    month = db.Column(db.String(7), nullable=False)  # YYYY-MM
-    target_amount_for_month = db.Column(db.Float, nullable=False, default=0.0)
-    status = db.Column(db.String(20), nullable=False, default="planned")  # planned|completed
+    email = db.Column(db.String(200), nullable=True)
+    enable_weekly_digest = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class WeeklyDigestLog(db.Model):
+    __tablename__ = "weekly_digest_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    period_start = db.Column(db.DateTime, nullable=False)
+    period_end = db.Column(db.DateTime, nullable=False)
+
+    sent_at = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(30), nullable=False, default="scheduled")  # scheduled|sent|failed|done
+    digest_text = db.Column(db.Text, nullable=True)
+    ai_used = db.Column(db.Boolean, default=False)
+
+    snapshot_net_worth_start = db.Column(db.Float, nullable=True)
+    snapshot_net_worth_end = db.Column(db.Float, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('period_start', 'period_end', name='uq_weekly_digest_period'),
+    )
 
     def to_dict(self):
         return {
             "id": self.id,
-            "goal_id": self.goal_id,
-            "month": self.month,
-            "target_amount_for_month": self.target_amount_for_month,
+            "period_start": self.period_start.isoformat() if self.period_start else None,
+            "period_end": self.period_end.isoformat() if self.period_end else None,
+            "sent_at": self.sent_at.isoformat() if self.sent_at else None,
             "status": self.status,
+            "digest_text": self.digest_text,
+            "ai_used": self.ai_used,
+            "snapshot_net_worth_start": self.snapshot_net_worth_start,
+            "snapshot_net_worth_end": self.snapshot_net_worth_end,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
-
-
 
