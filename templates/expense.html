@@ -35,6 +35,7 @@
         <th style="text-align: center; padding: 10px; border-bottom: 1px solid var(--border);">Date</th>
         <th style="text-align: center; padding: 10px; border-bottom: 1px solid var(--border);">Category</th>
         <th style="text-align: center; padding: 10px; border-bottom: 1px solid var(--border);">Amount</th>
+        <th style="text-align: center; padding: 10px; border-bottom: 1px solid var(--border);">Actions</th>
       </tr>
     </thead>
     <tbody id="expenseTableBody"></tbody>
@@ -50,6 +51,58 @@
       <div class="gold-loader"></div>
     </div>
   </div>
+
+  <!-- Edit Expense Modal -->
+  <div id="editModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.6); backdrop-filter:blur(5px); justify-content:center; align-items:center;">
+    <div class="card" style="width:100%; max-width:400px; padding:30px; border: 1px solid var(--border); box-shadow: 0 30px 80px rgba(6, 8, 12, 0.75); position:relative; margin: 20px;">
+      <span class="close-modal" onclick="closeEditModal()" style="position:absolute; right:20px; top:15px; font-size:24px; cursor:pointer; color:var(--muted); transition:color 0.2s;">&times;</span>
+      <h2 style="font-family:'Syne', sans-serif; font-size:20px; color:var(--text); margin-bottom:20px; font-weight:700;">✏️ Edit Expense</h2>
+      <form id="editExpenseForm">
+        <input type="hidden" id="editExpenseId">
+        
+        <label for="editCategory">Category</label>
+        <select id="editCategory" required style="margin-bottom: 12px; width: 100%; padding: 12px; background: rgba(17, 26, 46, 0.9); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; color: var(--text); font-family: inherit; font-size: 13px; outline: none;">
+          <option value="Food">Food</option>
+          <option value="Rent">Rent</option>
+          <option value="Travel">Travel</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Other">Other</option>
+        </select>
+        
+        <label for="editAmount">Amount (₹)</label>
+        <input type="number" required min="0.01" step="any" id="editAmount" placeholder="Amount (₹)" style="margin-bottom: 12px; background: rgba(17, 26, 46, 0.9); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; width: 100%;">
+        
+        <label for="editDate">Date</label>
+        <input type="date" id="editDate" required style="margin-bottom: 20px; width: 100%; padding: 12px; background: rgba(17, 26, 46, 0.9); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; color: var(--text); font-family: inherit; font-size: 13px; outline: none;">
+        
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 10px;">
+          <button type="button" class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .close-modal:hover {
+      color: var(--text) !important;
+    }
+    #editCategory option {
+      background: #0d1320;
+      color: #e2e8f0;
+    }
+    body.light-theme #editCategory option {
+      background: #ffffff;
+      color: #1f2937;
+    }
+    #editExpenseForm label {
+      margin-bottom: 4px;
+    }
+  </style>
 </div>
 {% endblock %}
 
@@ -128,7 +181,9 @@
       const tableBody = document.getElementById("expenseTableBody");
       tableBody.innerHTML = "";
 
-      (calcData.expenses || []).forEach(expense => {
+      window.allExpenses = calcData.expenses || [];
+
+      window.allExpenses.forEach(expense => {
         const formattedDate = new Date(expense.date).toLocaleDateString("en-IN", {
           day: "numeric",
           month: "short",
@@ -140,6 +195,10 @@
             <td style="padding:10px; color:var(--text);">${formattedDate}</td>
             <td style="padding:10px; color:var(--text);">${expense.category}</td>
             <td style="padding:10px; color:var(--gold); font-weight:600;">₹${fmtNum(expense.amount)}</td>
+            <td style="padding:10px;">
+              <button class="btn btn-ghost" style="padding:4px 8px; font-size:12px; min-height:30px; margin-right:5px;" onclick="openEditModal(${expense.id})">✏️ Edit</button>
+              <button class="btn btn-ghost" style="padding:4px 8px; font-size:12px; min-height:30px; color:var(--red); border-color:rgba(224, 82, 82, 0.2);" onclick="deleteExpense(${expense.id})">🗑️ Delete</button>
+            </td>
           </tr>
         `;
       });
@@ -204,6 +263,81 @@
 
     } catch (error) {
       console.error("Expense Loading Error:", error);
+    }
+  }
+
+  function openEditModal(expenseId) {
+    const expense = (window.allExpenses || []).find(e => e.id === expenseId);
+    if (!expense) return;
+    
+    document.getElementById("editExpenseId").value = expense.id;
+    document.getElementById("editCategory").value = expense.category;
+    document.getElementById("editAmount").value = expense.amount;
+    document.getElementById("editDate").value = expense.date;
+    
+    const modal = document.getElementById("editModal");
+    modal.style.display = "flex";
+    modal.firstElementChild.style.animation = "modalFadeIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)";
+  }
+
+  function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+  }
+
+  const editExpenseForm = document.getElementById("editExpenseForm");
+  if (editExpenseForm) {
+    editExpenseForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      
+      const expenseId = document.getElementById("editExpenseId").value;
+      const updatedExpense = {
+        category: document.getElementById("editCategory").value,
+        amount: parseFloat(document.getElementById("editAmount").value),
+        date: document.getElementById("editDate").value
+      };
+      
+      try {
+        const response = await fetch(`/expense/${expenseId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(updatedExpense)
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          closeEditModal();
+          loadExpenses();
+        } else {
+          alert("Error: " + (data.error || "Could not update expense"));
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Error updating expense");
+      }
+    });
+  }
+
+  async function deleteExpense(expenseId) {
+    if (!confirm("Are you sure you want to delete this expense?")) return;
+    
+    try {
+      const response = await fetch(`/expense/${expenseId}`, {
+        method: "DELETE"
+      });
+      
+      const data = await response.json();
+      
+      if (data.status === "success") {
+        loadExpenses();
+      } else {
+        alert("Error: " + (data.error || "Could not delete expense"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting expense");
     }
   }
 
