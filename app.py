@@ -380,6 +380,112 @@ def tax():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/tax/simulate", methods=["POST"])
+def tax_simulate():
+    try:
+        from utils.tax import simulate_tax_scenarios
+
+        data = request.json or {}
+        if not isinstance(data, dict):
+            raise ValidationError("Request body must be a JSON object")
+
+        income = validate_float(data.get("income"), "income", min_val=0.0)
+
+        scenario_a = data.get("scenario_a") or {}
+        scenario_b = data.get("scenario_b") or {}
+
+        if not isinstance(scenario_a, dict) or not isinstance(scenario_b, dict):
+            raise ValidationError("'scenario_a' and 'scenario_b' must be objects")
+
+        scenario_a_d80c = validate_float(scenario_a.get("deduction_80c", 0.0), "scenario_a.deduction_80c", min_val=0.0)
+        scenario_a_d80d = validate_float(scenario_a.get("deduction_80d", 0.0), "scenario_a.deduction_80d", min_val=0.0)
+        scenario_a_hra = validate_float(scenario_a.get("deduction_hra", 0.0), "scenario_a.deduction_hra", min_val=0.0)
+
+        scenario_b_d80c = validate_float(scenario_b.get("deduction_80c", 0.0), "scenario_b.deduction_80c", min_val=0.0)
+        scenario_b_d80d = validate_float(scenario_b.get("deduction_80d", 0.0), "scenario_b.deduction_80d", min_val=0.0)
+        scenario_b_hra = validate_float(scenario_b.get("deduction_hra", 0.0), "scenario_b.deduction_hra", min_val=0.0)
+
+        result = simulate_tax_scenarios(
+            income,
+            scenario_a={
+                "deduction_80c": scenario_a_d80c,
+                "deduction_80d": scenario_a_d80d,
+                "deduction_hra": scenario_a_hra,
+            },
+            scenario_b={
+                "deduction_80c": scenario_b_d80c,
+                "deduction_80d": scenario_b_d80d,
+                "deduction_hra": scenario_b_hra,
+            },
+        )
+
+        # Deterministic explanation always available
+        best_regime_a = result["best_regime"]["scenario_a"]
+        best_regime_b = result["best_regime"]["scenario_b"]
+        switch_savings_new = float(result["comparison"]["switch"]["new_regime"]["savings"])
+        switch_savings_old = float(result["comparison"]["switch"]["old_regime"]["savings"])
+
+        # pick regime under which switching A->B saves more (deterministic)
+        if switch_savings_new >= switch_savings_old and switch_savings_new > 0:
+            regime_for_explanation = "New Regime"
+        elif switch_savings_old > 0:
+            regime_for_explanation = "Old Regime"
+        else:
+            regime_for_explanation = result["comparison"]["best_scenario_by_savings_under_recommended_regime"]
+
+        # Build deterministic lever explanation from sensitivity rankings for the best regime of scenario B
+        scenario_b_best = best_regime_b
+        sens_for_scenario_b = result["sensitivity"]["scenario_b"]["new_regime"] if scenario_b_best == "New Regime" else result["sensitivity"]["scenario_b"]["old_regime"]
+        lever_ranking = result["sensitivity"]["scenario_b"]["new_regime"]["lever_ranking_for_best_regime"] if scenario_b_best == "New Regime" else result["sensitivity"]["scenario_b"]["old_regime"]["lever_ranking_for_best_regime"]
+
+        deterministic_explanation = (
+            f"Regime outcome: Scenario A is better under {best_regime_a}, while Scenario B is better under {best_regime_b}. "
+            f"Under {scenario_b_best}, the biggest tax lever tends to be: {lever_ranking[0]['lever']} "
+            f"(≈ {abs(lever_ranking[0]['delta_per_1']):.2f} tax change per ₹1). "
+        )
+
+        if client:
+            # AI explanation prompt (use computed deltas + savings)
+            prompt = (
+                f"User wants to compare tax scenarios in India.\n\n"
+                f"Income: ₹{result['income']:.0f}\n\n"
+                f"Scenario A recommended regime: {best_regime_a}\n"
+                f"Scenario B recommended regime: {best_regime_b}\n\n"
+                f"Switching A -> B savings:\n"
+                f"- New regime savings: ₹{switch_savings_new:.2f}\n"
+                f"- Old regime savings: ₹{switch_savings_old:.2f}\n\n"
+                f"Sensitivity (Scenario B, per ₹1 increase):\n"
+                f"{lever_ranking}\n\n"
+                f"Explain in simple terms why the winning regime is likely to be {best_regime_b} "
+                f"and which levers (80C/80D/HRA) give the biggest savings. "
+                f"Use bullet points and keep it under 8 lines."
+            )
+            try:
+                ai_res = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[
+                        {"role": "system", "content": "You are a professional Indian tax consultant. Provide concise, actionable insights."},
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+                explanation = ai_res.choices[0].message.content.strip()
+            except Exception as ai_err:
+                app.logger.error(f"Tax simulate AI error: {str(ai_err)}")
+                explanation = deterministic_explanation
+        else:
+            explanation = deterministic_explanation
+
+        result["explanation"] = explanation
+        result["ai_available"] = client is not None
+
+        return jsonify({"result": result})
+
+    except ValidationError as e:
+        raise e
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 # ---------------- 📄 PDF ----------------
 @app.route("/upload", methods=["POST"])
 def upload():
