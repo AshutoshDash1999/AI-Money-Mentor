@@ -14,15 +14,18 @@
   <div class="menu-overlay"></div>
 
   <!-- Mobile Top Navigation Header -->
-  <div class="mobile-header">
-    <button class="menu-toggle-btn" onclick="toggleMobileMenu()">☰</button>
+  <div class="mobile-header" style="justify-content: space-between;">
     <div class="mobile-logo">₹ Money Mentor</div>
+    <button class="theme-toggle-btn theme-toggle-mobile" onclick="toggleTheme()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text); cursor: pointer; padding: 0;">
+      <span class="icon" style="font-size: 16px; line-height: 1;">☀️</span>
+      <span class="text" style="font-size: 9px; margin-top: 2px;">Light Mode</span>
+    </button>
   </div>
 
   <!-- ══════════ SIDEBAR ══════════ -->
   <div class="sidebar">
     <div class="logo">₹ Money Mentor</div>
-    <button class="btn btn-ghost" id="themeToggle" onclick="toggleTheme()" style="margin-bottom:15px;width:100%;">
+    <button class="btn btn-ghost theme-toggle-btn" onclick="toggleTheme()" style="margin-bottom:15px;width:100%;">
       ☀️ Light Mode
     </button>
 
@@ -54,23 +57,23 @@
     // Theme Toggle State Persistence
     function toggleTheme() {
       document.body.classList.toggle("light-theme");
-      const btn = document.getElementById("themeToggle");
+      const btns = document.querySelectorAll(".theme-toggle-btn");
       if (document.body.classList.contains("light-theme")) {
         localStorage.setItem("theme", "light");
-        if (btn) btn.innerHTML = "🌙 Dark Mode";
+        btns.forEach(btn => btn.innerHTML = "🌙 Dark Mode");
       } else {
         localStorage.setItem("theme", "dark");
-        if (btn) btn.innerHTML = "☀️ Light Mode";
+        btns.forEach(btn => btn.innerHTML = "☀️ Light Mode");
       }
     }
 
     // Apply saved theme immediately
     (function () {
       const savedTheme = localStorage.getItem("theme");
-      const btn = document.getElementById("themeToggle");
+      const btns = document.querySelectorAll(".theme-toggle-btn");
       if (savedTheme === "light") {
         document.body.classList.add("light-theme");
-        if (btn) btn.innerHTML = "🌙 Dark Mode";
+        btns.forEach(btn => btn.innerHTML = "🌙 Dark Mode");
       }
     })();
 
@@ -87,20 +90,9 @@
     // Mobile Menu Toggle
     function toggleMobileMenu() {
       const sidebar = document.querySelector('.sidebar');
-      const overlay = document.querySelector('.menu-overlay');
-      if (sidebar && overlay) {
+      if (sidebar) {
         sidebar.classList.toggle('open');
-        overlay.classList.toggle('active');
       }
-    }
-
-    const overlay = document.querySelector('.menu-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', () => {
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-      });
     }
 
     // Common helpers
