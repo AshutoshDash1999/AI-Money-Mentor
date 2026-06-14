@@ -21,6 +21,10 @@
         <button class="btn btn-ghost" style="flex:1" onclick="resetScore()" id="scoreResetBtn">Reset</button>
       </div>
       <div id="scoreResult" class="result-box"></div>
+      <div id="export-section" style="display:none; gap:10px; margin-top:14px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="exportReport('csv')" id="exportCsvBtn">⬇️ Download CSV</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="exportReport('pdf')" id="exportPdfBtn">📄 Download PDF</button>
+      </div>
     </div>
     <div class="card" style="min-height: 380px;">
       <div class="card-title">Financial Health Breakdown</div>
@@ -35,6 +39,7 @@
 {% block scripts %}
 <script>
   let scoreChartInstance = null;
+  let lastReportData = null;
 
   async function calcScore() {
     const incomeRaw = document.getElementById('s_income').value;
@@ -107,6 +112,17 @@
             </div>
           </div>
         `);
+
+        lastReportData = {
+          income, expenses, savings,
+          investments: invest,
+          debt, emergency,
+          money_score: `${data.score} (${data.status})`,
+          tax: 'N/A',
+          sip_projection: 'N/A'
+        };
+        const exportSection = document.getElementById('export-section');
+        if (exportSection) exportSection.style.display = 'flex';
 
         // Compute sub-scores locally for visual rendering
         const savingsRateVal = income>0? parseFloat(savings) / parseFloat(income):0;
@@ -181,6 +197,33 @@
     if (scoreChartInstance) {
       scoreChartInstance.destroy();
       scoreChartInstance = null;
+    }
+    lastReportData = null;
+    const exportSection = document.getElementById('export-section');
+    if (exportSection) exportSection.style.display = 'none';
+  }
+
+  async function exportReport(format) {
+    if (!lastReportData) return;
+    try {
+      const response = await fetch(`/export/${format}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lastReportData)
+      });
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `financial_report.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      showResult('scoreResult', '⚠ Could not export report.');
     }
   }
 </script>
